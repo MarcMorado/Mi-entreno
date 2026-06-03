@@ -126,6 +126,18 @@
   .ai-box b{color:var(--ink)}
   .copy{background:var(--accent2);color:#000;border:0;border-radius:10px;padding:11px;
     font-weight:800;font-size:13px;width:100%;margin-top:10px}
+  .rev-due{background:linear-gradient(135deg,rgba(255,77,28,.18),rgba(255,210,63,.12));
+    border:1px solid var(--accent);border-radius:12px;padding:13px 14px;margin:4px 0 12px;
+    font-size:13px;color:var(--ink);line-height:1.5}
+  .rev-due b{color:var(--accent)}
+  .me .rev-due b{color:var(--accent)} .her .rev-due{border-color:var(--her)} .her .rev-due b{color:var(--her)}
+  .rev-ok{background:rgba(61,220,132,.08);border:1px solid rgba(61,220,132,.3);border-radius:12px;
+    padding:11px 14px;margin:4px 0 12px;font-size:12.5px;color:var(--good);font-weight:700}
+  .rev-ok b{font-weight:900}
+  .rev-done-btn{width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--mute);
+    border-radius:10px;padding:11px;font-family:'Archivo';font-weight:700;font-size:12.5px;margin-top:8px}
+  .backup-btn{width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--ink);
+    border-radius:10px;padding:13px;font-family:'Archivo';font-weight:800;font-size:13.5px;margin-top:9px}
   .week-badge{font-family:'Bebas Neue';font-size:15px;letter-spacing:1px;color:var(--mute)}
   .warn{font-size:11.5px;color:var(--accent2);background:rgba(255,210,63,.07);
     border:1px solid rgba(255,210,63,.2);border-radius:10px;padding:11px;margin-top:13px;line-height:1.5}
@@ -396,6 +408,10 @@ function viewTrain(){
     h+=`<div class="warn">⚠️ Reentrada tras lesión de hombro: estás en fase de reconstrucción (sem ${weekNum(u)}/4). Prioriza técnica y cero dolor sobre subir peso. Si el hombro molesta, baja carga o salta el ejercicio.</div>`;
   if(u==='her' && weekNum(u)<=2)
     h+=`<div class="warn">💡 Primeras semanas: el objetivo es aprender la técnica con peso ligero. Los resultados llegan, no tengas prisa por cargar.</div>`;
+  // aviso de revisión cada 3 semanas
+  const _lr=load(u).lastReviewWeek||1;
+  if(weekNum(u)-_lr>=3)
+    h+=`<div class="warn">🔔 Toca revisión de entreno (semana ${weekNum(u)}). Ve a la pestaña 🤖 Claude, copia tu resumen y pégamelo para actualizar tu rutina.</div>`;
 
   day.ex.forEach((e,i)=>{
     const w=exWeight(u,e.n);
@@ -695,6 +711,10 @@ function buzz(){ try{ if(navigator.vibrate) navigator.vibrate([200,100,200]);
 
 function viewAI(){
   const u=USER, d=load(u);
+  const wk=weekNum(u);
+  const lastRev=d.lastReviewWeek||1;
+  const weeksSince=wk-lastRev;
+  const due=weeksSince>=3;
   // construye resumen para pegar en Claude
   const wlist=Object.entries(d.weights).map(([k,v])=>`${k}: ${v}kg`).join('\n') || 'sin datos aún';
   const recent=[...d.sessions].reverse().slice(0,5).map(s=>{
@@ -704,18 +724,55 @@ function viewAI(){
   const bw=d.bw||[]; const bwTxt=bw.length?`Peso: ${bw[0].kg}kg → ${bw[bw.length-1].kg}kg (${bw.length} registros)`:'sin registros de peso';
   const fdays=Object.keys(d.food||{}).sort().reverse().slice(0,5);
   const fTxt=fdays.length?fdays.map(k=>{const meals=d.food[k]||[];const t=meals.reduce((a,m)=>a+m.kcal,0);const tp=meals.reduce((a,m)=>a+(m.prot||0),0);return k+': '+t+' kcal, '+tp+'g prot';}).join('\n'):'sin registro de comida';
-  const summary=`Soy ${PLAN[u].name}. Objetivo: ${PLAN[u].goal}. Semana ${weekNum(u)}, ${d.sessions.length} sesiones.\nObjetivo: ${kcalGoal(u)} kcal y ${protGoal(u)}g proteína/día.\n${bwTxt}\n\nCalorías/proteína últimos días:\n${fTxt}\n\nPesos actuales:\n${wlist}\n\nÚltimas sesiones:\n${recent}\n\nClaude, revisa mi progresión y mi pérdida de grasa: ¿algún estancamiento? ¿llego a la proteína? ¿ajusto calorías, volumen, peso o descanso?`;
-  return `<div class="card"><h2>🤖 Revisión con Claude</h2>
-    <div class="sub">La app sube los pesos sola cuando completas todas las reps. Pero cada 2-4 semanas conviene una revisión de estrategia. Copia tu resumen y pégalo en el chat de Claude.</div>
+  const summary=`Soy ${PLAN[u].name}. Objetivo: ${PLAN[u].goal}. Semana ${wk}, ${d.sessions.length} sesiones. Última revisión: semana ${lastRev}.\nObjetivo: ${kcalGoal(u)} kcal y ${protGoal(u)}g proteína/día.\n${bwTxt}\n\nCalorías/proteína últimos días:\n${fTxt}\n\nPesos actuales:\n${wlist}\n\nÚltimas sesiones:\n${recent}\n\nClaude, han pasado ${weeksSince} semanas desde la última revisión. Revisa mi progresión y actualiza mi entreno: ¿algún estancamiento? ¿toca cambiar ejercicios, meter variantes o dropsets? ¿ajusto calorías, volumen o descanso?`;
+
+  let h=`<div class="card"><h2>🤖 Revisión con Claude</h2>`;
+  // contador de revisión
+  if(due){
+    h+=`<div class="rev-due">🔔 <b>¡Toca revisión!</b> Han pasado ${weeksSince} semanas (estás en la semana ${wk}). Copia tu resumen, pégamelo en el chat y te actualizo el entreno.</div>`;
+  } else {
+    const falta=3-weeksSince;
+    h+=`<div class="rev-ok">✅ Próxima revisión en <b>${falta} semana${falta!==1?'s':''}</b> · estás en la semana ${wk}</div>`;
+  }
+  h+=`<div class="sub">La app sube los pesos sola. Cada 3 semanas conviene revisar la estrategia (cambiar ejercicios, variantes, dropsets). Pégame tu resumen y lo actualizo.</div>
     <div class="ai-box"><b>Tu resumen actual:</b><br><br>${summary.replace(/\n/g,'<br>')}</div>
-    <button class="copy" onclick="navigator.clipboard.writeText(\`${summary.replace(/`/g,'\\`')}\`).then(()=>alert('📋 Copiado. Pégalo en Claude.'))">📋 Copiar resumen para Claude</button>
-    </div>
+    <button class="copy" onclick="navigator.clipboard.writeText(\`${summary.replace(/`/g,'\\`')}\`).then(()=>alert('📋 Copiado. Pégalo en Claude.'))">📋 Copiar resumen para Claude</button>`;
+  if(due) h+=`<button class="rev-done-btn" onclick="markReviewed()">✓ Ya he hecho la revisión (reiniciar contador)</button>`;
+  h+=`</div>
     <div class="card"><h2 style="font-size:19px">Cómo funciona la progresión auto</h2>
     <div class="sub">• Doble progresión: cada ejercicio tiene un rango (ej. 8-12 reps).<br>
     • Marcas la ✓ en cada serie que completas en el tope del rango.<br>
     • Si completas TODAS las series en el tope → el peso sube solo (${u==='me'?'+2,5':'+1,25'} kg) la próxima vez.<br>
     • Si no, mantiene el peso hasta que lo domines.<br>
-    • El nº que ves en naranja es tu peso objetivo de hoy.</div></div>`;
+    • El nº que ves en naranja es tu peso objetivo de hoy.</div></div>
+    <div class="card"><h2 style="font-size:19px">💾 Copia de seguridad</h2>
+    <div class="sub">Tus datos viven en este móvil. Exporta de vez en cuando para tener copia. Si cambias de móvil o se borran, los recuperas importando.</div>
+    <button class="backup-btn" onclick="exportData()">⬇️ Exportar mis datos</button>
+    <button class="backup-btn" onclick="document.getElementById('importFile').click()">⬆️ Importar copia</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>`;
+  return h;
+}
+function markReviewed(){
+  const u=USER, d=load(u); d.lastReviewWeek=weekNum(u); save(u,d); render();
+  alert('✅ Contador reiniciado. La próxima revisión será en 3 semanas.');
+}
+function exportData(){
+  const data={me:load('me'), her:load('her'), exported:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='forja-backup-'+todayKey()+'.json'; a.click();
+}
+function importData(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const data=JSON.parse(r.result);
+    if(!confirm('Esto reemplazará TODOS los datos actuales de Marc y Krizia por los de la copia. ¿Seguro?')) return;
+    if(data.me) save('me',data.me); if(data.her) save('her',data.her);
+    alert('✅ Datos restaurados correctamente.'); render();
+  }catch(e){ alert('❌ Archivo no válido.'); } };
+  r.readAsText(f);
 }
 
 /* init */
