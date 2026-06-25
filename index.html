@@ -413,7 +413,48 @@ let USER='me', TAB='train', DAYIDX=0;
 const K = u=>'forja_'+u; // localStorage key por usuario
 function load(u){ try{return JSON.parse(localStorage.getItem(K(u)))||fresh()}catch(e){return fresh()} }
 function fresh(){ return {sessions:[], weights:{}, lastDay:-1, food:{}, bw:[], kcalGoal:null, cardioLog:[]}; }
-function save(u,d){ localStorage.setItem(K(u),JSON.stringify(d)); }
+function save(u,d){ localStorage.setItem(K(u),JSON.stringify(d)); syncToCloud(); }
+
+/* ===== Sincronización con la nube (Gist) para el coach IA ===== */
+function getSyncCfg(){ try{return JSON.parse(localStorage.getItem('forja_sync'))||null}catch(e){return null} }
+function setSyncCfg(token,gistId){ localStorage.setItem('forja_sync',JSON.stringify({token,gistId})); }
+let _syncTimer=null;
+function syncToCloud(){
+  const cfg=getSyncCfg(); if(!cfg||!cfg.token||!cfg.gistId) return;
+  // debounce: espera 2s tras el último cambio para no spamear
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(async()=>{
+    try{
+      const payload={me:load('me'), her:load('her'), updated:new Date().toISOString()};
+      await fetch('https://api.github.com/gists/'+cfg.gistId,{
+        method:'PATCH',
+        headers:{'Authorization':'token '+cfg.token,'Accept':'application/vnd.github+json'},
+        body:JSON.stringify({files:{'forja-data.json':{content:JSON.stringify(payload)}}})
+      });
+    }catch(e){ console.log('sync:',e.message); }
+  },2000);
+}
+async function setupSync(){
+  const st=document.getElementById('syncStatus');
+  const token=document.getElementById('ghToken').value.trim();
+  if(!token){ st.textContent='Pega tu token de GitHub primero.'; return; }
+  st.textContent='Creando almacén en la nube...';
+  try{
+    // crea un gist secreto nuevo con los datos actuales
+    const payload={me:load('me'), her:load('her'), updated:new Date().toISOString()};
+    const res=await fetch('https://api.github.com/gists',{
+      method:'POST',
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github+json'},
+      body:JSON.stringify({description:'FORJA datos (coach IA)',public:false,files:{'forja-data.json':{content:JSON.stringify(payload)}}})
+    });
+    const data=await res.json();
+    if(data.id){ setSyncCfg(token,data.id);
+      st.textContent='✅ Sincronización activada. Gist ID: '+data.id+' (guárdalo, va en el servidor).';
+      document.getElementById('gistIdBox').style.display='block';
+      document.getElementById('gistIdText').value=data.id;
+    } else { st.textContent='❌ Error: '+(data.message||'token inválido'); }
+  }catch(e){ st.textContent='❌ Error: '+e.message; }
+}
 
 /* peso actual de un ejercicio: el guardado, o el start del plan */
 function exWeight(u,exName){ const d=load(u); return (d.weights[exName]!==undefined)?d.weights[exName]:startOf(u,exName); }
@@ -985,6 +1026,16 @@ function viewAI(){
       <div class="sub" style="font-size:11.5px">Tu suscripción push (cópiala para el servidor):</div>
       <textarea id="subText" readonly style="width:100%;height:90px;background:var(--bg);border:1px solid var(--line);color:var(--mute);border-radius:9px;padding:9px;font-size:9px;font-family:monospace;margin-top:6px"></textarea>
       <button class="copy" style="margin-top:8px" onclick="navigator.clipboard.writeText(document.getElementById('subText').value).then(()=>alert('📋 Suscripción copiada'))">📋 Copiar suscripción</button>
+    </div>
+    </div>
+    <div class="card"><h2 style="font-size:19px">☁️ Sincronización (Coach IA)</h2>
+    <div class="sub">Para que tu entrenador IA vea tu progreso real, conecta un almacén en la nube. Pega un token de GitHub (con permiso de Gist).</div>
+    <input id="ghToken" placeholder="ghp_... tu token de GitHub" style="width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:11px;font-size:12px;font-family:monospace;margin-top:10px;box-sizing:border-box">
+    <button class="backup-btn" onclick="setupSync()">☁️ Activar sincronización</button>
+    <div id="syncStatus" class="note-ex" style="margin-top:10px"></div>
+    <div id="gistIdBox" style="display:none;margin-top:8px">
+      <div class="sub" style="font-size:11.5px">Tu Gist ID (va en el servidor como secret GIST_ID):</div>
+      <input id="gistIdText" readonly style="width:100%;background:var(--bg);border:1px solid var(--line);color:var(--mute);border-radius:9px;padding:9px;font-size:11px;font-family:monospace;margin-top:6px;box-sizing:border-box">
     </div>
     </div>
     <div class="card"><h2 style="font-size:19px">💾 Copia de seguridad</h2>
