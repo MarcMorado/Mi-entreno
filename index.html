@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0c">
+<link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>FORJA · Entreno</title>
@@ -190,6 +191,18 @@
   .jp-pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
   .jp-pill{font-size:11px;font-weight:800;color:var(--ink);background:var(--panel2);
     border:1px solid var(--line);padding:7px 11px;border-radius:999px}
+  .motiv{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:11px 13px;margin-bottom:13px;font-size:13px;font-weight:600;
+    color:var(--ink);line-height:1.45}
+  .her .motiv{border-left-color:var(--her)}
+  .ctype{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+  .ctype button{flex:1;min-width:70px;border:1px solid var(--line);background:var(--panel2);color:var(--mute);
+    border-radius:9px;padding:9px 6px;font-weight:800;font-size:11.5px;letter-spacing:.2px}
+  .ctype button.on{background:var(--accent);color:#000;border-color:var(--accent)}
+  .her .ctype button.on{background:var(--her)}
+  .cardio-add{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;margin-top:12px}
+  .cardio-add select{background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;font-family:'Archivo';font-weight:600;font-size:13px;outline:none;width:100%}
   .countdown b{font-family:'Bebas Neue';font-size:21px;vertical-align:-1px;margin:0 2px}
   .me .countdown{background:linear-gradient(135deg,var(--accent),#ff8a4c);color:#2a0d00}
   .kcal-ring{display:flex;align-items:center;gap:16px}
@@ -246,6 +259,7 @@
     <div class="tabs" id="tabs">
       <button class="on" onclick="setTab('train',this)">🏋️ Hoy</button>
       <button onclick="setTab('week',this)">📅 Semana</button>
+      <button onclick="setTab('cardio',this)">🏃 Cardio</button>
       <button onclick="setTab('food',this)">🍽️ Comida</button>
       <button onclick="setTab('body',this)">⚖️ Peso</button>
       <button onclick="setTab('stats',this)">📈 Progreso</button>
@@ -284,42 +298,65 @@ const PLAN = {
       note:"Definición por fases hasta el 10 de agosto. Proteína alta para no perder músculo. Si notas mareos, mal descanso o el hombro se resiente: aflojar."},
     cardio:{label:"Caminar inclinado", min:12, note:"Inclinación 8-12%, ritmo cómodo. Quema grasa sin tocar tus piernas para el gym."},
     inc:2.5, // kg que sube cuando completa
-    days:[
-      {tag:"Día 1 · Empuje", title:"Pecho · Hombro · Tríceps",
-       note:"Hombro lesionado: calienta con banda 5 min. Si duele el press, paras ese ejercicio.",
+    fullBody:{tag:"ARRANQUE · Full Body", title:"Día 1 · Cuerpo completo",
+       note:"Día de arranque (solo hoy). Activa todo el cuerpo sin machacar, vuelve a coger contacto. El lunes empieza la rotación de 5 días. Hombro: calienta con banda, cero dolor.",
        ex:[
-        {n:"Press inclinado mancuerna / banco libre",s:3,rm:8,rM:12,note:"Empieza ligero, prioriza no dolor de hombro",start:10},
-        {n:"Press pecho máquina (inclinada)",s:3,rm:10,rM:12,note:"La tuya que sube un poco, rango sin dolor",start:20},
-        {n:"Aperturas en máquina / pec deck",s:3,rm:12,rM:15,start:10},
-        {n:"Elevaciones laterales mancuerna",s:4,rm:12,rM:15,note:"CLAVE para la V · peso ligero, técnica",start:6},
-        {n:"Extensión tríceps polea",s:3,rm:12,rM:15,start:15},
+        {n:"Press pecho máquina (inclinada)",s:3,rm:10,rM:12,note:"Suave, reconectar con el pecho sin forzar hombro",start:20},
+        {n:"Jalón al pecho agarre ancho",s:3,rm:10,rM:12,note:"Espalda · la V",start:35},
+        {n:"Prensa (leg press)",s:3,rm:12,rM:15,note:"Pierna completa",start:60},
+        {n:"Elevaciones laterales mancuerna",s:3,rm:12,rM:15,note:"Hombro lateral · ligero",start:6},
+        {n:"Curl femoral tumbado",s:3,rm:12,rM:15,note:"Femoral · cero lumbar",start:25},
+        {n:"Face pull polea",s:3,rm:15,rM:20,note:"Salud de hombro",start:15},
+        {n:"Plancha (segundos)",s:3,rm:30,rM:45,note:"Core · anota segundos, peso=0",start:0},
        ]},
-      {tag:"Día 2 · Tirón", title:"Espalda · Bíceps · Postura",
-       note:"La espalda ancha es el 70% de la V. Aquí está tu prioridad.",
+    days:[
+      {tag:"Día 1 · Torso A (Lun)", title:"Pecho · Hombro · Tríceps",
+       note:"Hombro con recelo: calienta 5 min con banda. Si un press molesta, bajas peso o lo saltas. Nunca dolor.",
+       ex:[
+        {n:"Press inclinado mancuerna / banco libre",s:4,rm:8,rM:12,note:"Ángulo bajo (30°) si el hombro recela",start:10},
+        {n:"Press pecho máquina (inclinada)",s:3,rm:10,rM:12,note:"Rango sin dolor, controla la bajada",start:20},
+        {n:"Aperturas en máquina / pec deck",s:3,rm:12,rM:15,note:"Estira sin forzar el hombro",start:10},
+        {n:"Elevaciones laterales mancuerna",s:4,rm:12,rM:15,note:"CLAVE para la V · técnica sobre peso",start:6},
+        {n:"Extensión tríceps polea",s:3,rm:12,rM:15,start:15},
+        {n:"Press francés mancuerna",s:3,rm:10,rM:12,note:"Tríceps cabeza larga",start:8},
+       ]},
+      {tag:"Día 2 · Pierna A (Mar)", title:"Cuádriceps · Glúteo",
+       note:"Pierna dominante de cuádriceps. Sin peso muerto. Quema mucha grasa, aprieta el cardio después.",
+       ex:[
+        {n:"Sentadilla máquina (peso en hombros)",s:4,rm:8,rM:12,note:"Profundidad cómoda · la guiada",start:20},
+        {n:"Prensa (leg press)",s:4,rm:12,rM:15,note:"Pies medios",start:60},
+        {n:"Extensión de cuádriceps",s:3,rm:12,rM:15,note:"Aprieta arriba 1 seg",start:25},
+        {n:"Máquina de cadera / hip thrust",s:3,rm:12,rM:15,note:"Glúteo · espalda apoyada",start:30},
+        {n:"Gemelo en máquina",s:4,rm:15,rM:20,start:30},
+       ]},
+      {tag:"Día 3 · Espalda + Bíceps (Mié)", title:"La V · Dorsal ancho",
+       note:"Tu prioridad nº1 para la forma de superhéroe. La espalda ancha es el 70% de la V.",
        ex:[
         {n:"Jalón al pecho agarre ancho",s:4,rm:10,rM:12,note:"Ancho = dorsal ancho = V",start:35},
-        {n:"Seated row",s:3,rm:10,rM:12,note:"Aprieta escápulas atrás",start:35},
-        {n:"Remo máquina (manos elevadas al estómago)",s:3,rm:12,rM:15,note:"La que contraes hacia el estómago",start:20},
+        {n:"Dominada asistida (máquina)",s:3,rm:8,rM:10,note:"Baja la asistencia con el tiempo",start:35},
+        {n:"Seated row",s:4,rm:10,rM:12,note:"Aprieta escápulas atrás",start:35},
+        {n:"Remo máquina (manos elevadas al estómago)",s:3,rm:12,rM:15,start:20},
         {n:"Face pull polea",s:3,rm:15,rM:20,note:"Salud de hombro · hazlo siempre",start:15},
         {n:"Curl bíceps mancuerna",s:3,rm:10,rM:12,start:8},
        ]},
-      {tag:"Día 3 · Pierna", title:"Cuádriceps · Femoral · Glúteo",
-       note:"Pierna fuerte = base de todo y quema mucha grasa. Sin peso muerto: tu lumbar lo agradece.",
+      {tag:"Día 4 · Torso B (Jue)", title:"Hombro lateral · Pecho · Tríceps",
+       note:"Segundo estímulo de torso, enfocado en hombro lateral (la V) con menos presión que el día 1.",
        ex:[
-        {n:"Sentadilla máquina (peso en hombros)",s:4,rm:8,rM:12,note:"La tipo libre guiada · profundidad cómoda",start:20},
-        {n:"Prensa (leg press)",s:3,rm:12,rM:15,note:"Sustituye al peso muerto en cuádriceps",start:60},
-        {n:"Curl femoral tumbado",s:3,rm:10,rM:12,note:"Femoral aislado, CERO lumbar (sustituye P.muerto)",start:25},
-        {n:"Máquina de cadera / hip thrust",s:3,rm:12,rM:15,note:"Glúteo y cadena posterior, espalda apoyada",start:30},
-        {n:"Gemelo en máquina",s:4,rm:15,rM:20,start:30},
+        {n:"Elevaciones laterales mancuerna",s:5,rm:12,rM:15,note:"Doble dosis semanal · deltoide lateral = anchura",start:6},
+        {n:"Press hombro máquina/mancuerna",s:3,rm:10,rM:12,note:"Rango sin dolor, no fuerces arriba",start:8},
+        {n:"Aperturas en máquina / pec deck",s:3,rm:12,rM:15,note:"Pecho desde otro ángulo",start:10},
+        {n:"Remo al mentón polea/cuerda",s:3,rm:12,rM:15,note:"Deltoide y trapecio",start:15},
+        {n:"Extensión tríceps polea",s:3,rm:12,rM:15,start:15},
        ]},
-      {tag:"Día 4 · Full + V", title:"Hombro · Core · Brazo",
-       note:"Día estético: ensancha arriba, aprieta el centro.",
+      {tag:"Día 5 · Pierna B + Core (Vie)", title:"Femoral · Glúteo · Abdomen",
+       note:"Pierna dominante de femoral/glúteo, sin cargar lumbar. Cierra la semana + core.",
        ex:[
-        {n:"Elevaciones laterales (de nuevo)",s:4,rm:12,rM:15,note:"Doble dosis semanal de deltoide lateral",start:6},
-        {n:"Remo al mentón polea/cuerda",s:3,rm:12,rM:15,start:15},
-        {n:"Dominada asistida (máquina)",s:3,rm:8,rM:10,note:"Usa la de ayuda, baja la asistencia con el tiempo",start:35},
-        {n:"Curl femoral sentado",s:3,rm:12,rM:15,note:"Refuerza femoral · protege lumbar",start:25},
-        {n:"Plancha (segundos)",s:3,rm:30,rM:60,note:"Core fuerte = lumbar protegida · anota segundos, peso=0",start:0},
+        {n:"Curl femoral tumbado",s:4,rm:10,rM:12,note:"Femoral aislado · CERO lumbar",start:25},
+        {n:"Máquina de cadera / hip thrust",s:4,rm:12,rM:15,note:"Glúteo · aprieta arriba 1 seg",start:30},
+        {n:"Prensa pies altos (leg press)",s:3,rm:12,rM:15,note:"Pies altos = más glúteo y femoral",start:60},
+        {n:"Curl femoral sentado",s:3,rm:12,rM:15,note:"Segundo ángulo de femoral",start:25},
+        {n:"Plancha (segundos)",s:3,rm:30,rM:60,note:"Core protege la lumbar · anota seg, peso=0",start:0},
+        {n:"Rueda abdominal / crunch polea",s:3,rm:12,rM:15,start:10},
        ]},
     ]
   },
@@ -375,7 +412,7 @@ const PLAN = {
 let USER='me', TAB='train', DAYIDX=0;
 const K = u=>'forja_'+u; // localStorage key por usuario
 function load(u){ try{return JSON.parse(localStorage.getItem(K(u)))||fresh()}catch(e){return fresh()} }
-function fresh(){ return {sessions:[], weights:{}, lastDay:-1, food:{}, bw:[], kcalGoal:null}; }
+function fresh(){ return {sessions:[], weights:{}, lastDay:-1, food:{}, bw:[], kcalGoal:null, cardioLog:[]}; }
 function save(u,d){ localStorage.setItem(K(u),JSON.stringify(d)); }
 
 /* peso actual de un ejercicio: el guardado, o el start del plan */
@@ -386,8 +423,44 @@ function startOf(u,exName){ for(const day of PLAN[u].days) for(const e of day.ex
 function suggestedDay(u){ const d=load(u); return (d.lastDay+1)%PLAN[u].days.length; }
 function weekNum(u){ const d=load(u); return Math.floor(d.sessions.length/PLAN[u].days.length)+1; }
 
+/* día de entreno según día de la semana (solo Marc, 5 días Lun-Vie) */
+function todayIsoKey(){ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
+function isSpecialDay(u){
+  if(u==='me' && todayIsoKey()==='2026-06-26' && PLAN.me.fullBody) return 'fullbody';
+  return null;
+}
+function dayByWeekday(u){
+  const wd=new Date().getDay(); // 0=dom,1=lun...6=sáb
+  if(u==='me'){ // Lun-Vie = Día 0-4, finde = null (cardio/descanso)
+    if(wd>=1 && wd<=5) return wd-1;
+    return -1; // finde
+  }
+  return suggestedDay(u); // Krizia mantiene rotación normal
+}
+/* día de la operación 1..N por calendario */
+function operationDay(u){
+  const c=PLAN[u].cutMode; if(!c) return null;
+  const start=new Date(c.from+'T00:00'); const now=new Date();
+  const total=Math.round((new Date(c.to+'T00:00')-start)/86400000);
+  const d=Math.floor((now-start)/86400000)+1;
+  if(d<1||d>total) return null;
+  return {d, total};
+}
+/* mensaje motivacional según hora y día */
+function motivMsg(u){
+  const now=new Date(); const hr=now.getHours(); const min=now.getMinutes(); const wd=now.getDay();
+  const finde=(wd===0||wd===6);
+  if(hr>=6 && hr<11) return finde?'☀️ Buenos días. Hoy toca cardio suave o descanso. Cuida la comida.':'☀️ Buenos días. Hoy entrenas a las 12:00. Desayuna bien y a por el día.';
+  if(hr>=11 && hr<12){ const f=30-(min>=30?min-30:min); return finde?'🚶 Mañana de finde: un buen paseo te viene genial.':`💪 ¡Casi la hora! En ${60-min} min toca entrenar. Prepara la mochila.`; }
+  if(hr>=12 && hr<14) return finde?'🚶 ¿Ya has movido el cuerpo hoy? Un paseo cuenta.':'🔥 Hora de entrenar. Técnica y cero dolor. ¡A darlo todo!';
+  if(hr>=14 && hr<19) return '🥩 ¿Vas bien de proteína? Revisa tus anillos en Comida.';
+  if(hr>=19 && hr<20) return '🏃 ¡Las 20:00 se acercan! Prepárate para caminar. Ritmo suave, a quemar grasa.';
+  if(hr>=20 && hr<22) return '🌙 Sesión de tarde: caminar o trote suave. Si estás muy cansado, descansa sin culpa.';
+  return '😴 A descansar. Dormir 7-8h es parte del plan: ahí se construye el músculo.';
+}
+
 /* ============ RENDER ============ */
-function setUser(u){ USER=u; DAYIDX=suggestedDay(u);
+function setUser(u){ USER=u; DAYIDX=dayByWeekday(u)>=0?dayByWeekday(u):suggestedDay(u);
   document.body.className=u;
   document.getElementById('btnMe').className='me'+(u==='me'?' on':'');
   document.getElementById('btnHer').className='her'+(u==='her'?' on':'');
@@ -399,10 +472,12 @@ function setTab(t,el){ TAB=t; [...document.querySelectorAll('.tabs button')].for
 function render(){
   const m=document.getElementById('main'); const sb=document.getElementById('saveBar');
   const fab=document.getElementById('restFab');
-  sb.style.display = (TAB==='train')?'block':'none';
-  fab.style.display = (TAB==='train')?'flex':'none';
+  const wendMarc = (USER==='me' && TAB==='train' && dayByWeekday('me')===-1);
+  sb.style.display = (TAB==='train' && !wendMarc)?'block':'none';
+  fab.style.display = (TAB==='train' && !wendMarc)?'flex':'none';
   if(TAB==='train') m.innerHTML=viewTrain();
   else if(TAB==='week') m.innerHTML=viewWeek();
+  else if(TAB==='cardio') m.innerHTML=viewCardio();
   else if(TAB==='food') m.innerHTML=viewFood();
   else if(TAB==='body') m.innerHTML=viewBody();
   else if(TAB==='stats') m.innerHTML=viewStats();
@@ -410,13 +485,17 @@ function render(){
 }
 
 function viewTrain(){
-  const u=USER, day=PLAN[u].days[DAYIDX];
+  const u=USER;
+  const wend = (u==='me' && dayByWeekday(u)===-1); // finde para Marc
   let h=`<div class="card">`;
-  // banner modo julio (cut)
+  // mensaje motivacional
+  h+=`<div class="motiv">${motivMsg(u)}</div>`;
+  // banner modo julio (cut) con día de operación
   const _cut=cutActive(u);
   if(_cut){
     const dleft=Math.ceil((new Date(_cut.to+'T00:00') - new Date())/86400000);
-    h+=`<div class="cut-banner">🔥 <b>${_cut.label}</b> activo · ${dleft} días de definición · objetivo ${_cut.kcal} kcal / ${_cut.protein}g prot</div>`;
+    const op=operationDay(u);
+    h+=`<div class="cut-banner">🔥 <b>${_cut.label}</b>${op?' · DÍA '+op.d+'/'+op.total:''} · ${dleft} días restantes · ${_cut.kcal} kcal / ${_cut.protein}g</div>`;
   }
   // aviso de revisión de fase
   const _pr=phaseReviewDue(u);
@@ -426,7 +505,20 @@ function viewTrain(){
     const days=Math.ceil((new Date(PLAN[u].targetDate+'T00:00') - new Date())/86400000);
     if(days>0) h+=`<div class="countdown">🎯 <b>${days}</b> días para ${PLAN[u].targetName}</div>`;
   }
-  h+=`<div class="day-head"><h2>${day.title}</h2><span class="week-badge">SEM ${weekNum(u)}</span></div>
+  // FINDE para Marc: día de cardio/descanso, sin pesas
+  if(wend){
+    const isSun=new Date().getDay()===0;
+    h+=`<div class="day-head"><h2>${isSun?'Domingo · Descanso':'Sábado · Cardio'}</h2></div>
+      <span class="day-tag">SIN GYM</span>
+      <div class="sub">${isSun?'Descanso total. El descanso es parte del plan: aquí se construye el músculo. Pasea si te apetece y cuida la comida.':'Tu gimnasio cierra hoy. Toca cardio suave: 40 min de paseo rápido o bici. Apúntalo en la pestaña 🏃 Cardio.'}</div>
+      <div style="margin-top:14px"><button class="copy" style="background:var(--accent);color:#000" onclick="setTab('cardio',document.querySelectorAll('.tabs button')[2])">🏃 Ir a registrar cardio</button></div>
+    </div>`;
+    return h;
+  }
+  const _special=isSpecialDay(u);
+  const day=_special==='fullbody'?PLAN[u].fullBody:PLAN[u].days[DAYIDX];
+  const _op=operationDay(u);
+  h+=`<div class="day-head"><h2>${day.title}</h2><span class="week-badge">${_op?'DÍA '+_op.d+'/'+_op.total:'SEM '+weekNum(u)}</span></div>
     <span class="day-tag">${day.tag}</span>
     <div class="sub">${day.note}</div>`;
   if(u==='me' && weekNum(u)<=4)
@@ -479,13 +571,14 @@ function viewTrain(){
     h+=`<div class="card julio-plan">
       <div class="day-head"><h2 style="font-size:20px">🔥 Plan semanal definición</h2><span class="day-tag">DEFINICIÓN</span></div>
       <div class="sub">Además del entreno y la dieta, esto es lo que dispara la pérdida de grasa:</div>
-      <div class="jp-row"><span class="jp-d">Lun</span><span class="jp-t">Pesas (Día 1) + ${_cutC.cardioMin} min cardio</span></div>
-      <div class="jp-row"><span class="jp-d">Mar</span><span class="jp-t">Pesas (Día 2) + ${_cutC.cardioMin} min cardio</span></div>
-      <div class="jp-row"><span class="jp-d">Mié</span><span class="jp-t">Descanso activo · 30-40 min caminar suave</span></div>
-      <div class="jp-row"><span class="jp-d">Jue</span><span class="jp-t">Pesas (Día 3) + ${_cutC.cardioMin} min cardio</span></div>
-      <div class="jp-row"><span class="jp-d">Vie</span><span class="jp-t">Pesas (Día 4) + ${_cutC.cardioMin} min cardio</span></div>
-      <div class="jp-row"><span class="jp-d">Sáb</span><span class="jp-t">Cardio suave 40 min (bici/elíptica/paseo largo)</span></div>
-      <div class="jp-row"><span class="jp-d">Dom</span><span class="jp-t">Descanso total · pasea si te apetece</span></div>
+      <div class="sub">Ritmo de 7 días (empieza el día que entrenes, no tiene que ser lunes):</div>
+      <div class="jp-row"><span class="jp-d">1</span><span class="jp-t">Pesas Día 1 + ${_cutC.cardioMin} min cardio</span></div>
+      <div class="jp-row"><span class="jp-d">2</span><span class="jp-t">Pesas Día 2 + ${_cutC.cardioMin} min cardio</span></div>
+      <div class="jp-row"><span class="jp-d">3</span><span class="jp-t">Descanso de pesas · 30-40 min caminar suave</span></div>
+      <div class="jp-row"><span class="jp-d">4</span><span class="jp-t">Pesas Día 3 + ${_cutC.cardioMin} min cardio</span></div>
+      <div class="jp-row"><span class="jp-d">5</span><span class="jp-t">Pesas Día 4 + ${_cutC.cardioMin} min cardio</span></div>
+      <div class="jp-row"><span class="jp-d">6</span><span class="jp-t">Cardio suave 40 min (bici/elíptica/paseo largo)</span></div>
+      <div class="jp-row"><span class="jp-d">7</span><span class="jp-t">Descanso total · pasea si te apetece</span></div>
       <div class="jp-pills">
         <span class="jp-pill">👟 10-12k pasos/día</span>
         <span class="jp-pill">😴 7-8h sueño</span>
@@ -499,7 +592,7 @@ function viewTrain(){
 }
 
 function saveSession(){
-  const u=USER, day=PLAN[u].days[DAYIDX], d=load(u);
+  const u=USER, _sp=isSpecialDay(u), day=_sp==='fullbody'?PLAN[u].fullBody:PLAN[u].days[DAYIDX], d=load(u);
   const exBlocks=[...document.querySelectorAll('.sets')];
   let totalVol=0, log=[];
   exBlocks.forEach(blk=>{
@@ -698,6 +791,76 @@ function editGoal(){
   save(u,d); render();
 }
 
+/* ============ CARDIO ============ */
+let CARDIO_TYPE='Caminar inclinado';
+function setCardioType(t,el){ CARDIO_TYPE=t; [...document.querySelectorAll('.ctype button')].forEach(b=>b.className=''); el.className='on'; }
+function viewCardio(){
+  const u=USER, d=load(u), log=d.cardioLog||[];
+  const _cut=cutActive(u);
+  const goalMin=_cut?_cut.cardioMin:(PLAN[u].cardio?PLAN[u].cardio.min:12);
+  // total de hoy
+  const tk=todayKey();
+  const todayCardio=log.filter(c=>c.dateKey===tk);
+  const todayMin=todayCardio.reduce((a,c)=>a+c.min,0);
+  let h=`<div class="card">`;
+  if(_cut) h+=`<div class="cut-banner">🔥 Definición: meta ~${goalMin} min post-pesas + sesión tarde opcional</div>`;
+  h+=`<h2>🏃 Cardio de hoy</h2>
+    <div class="sub">Dos momentos: <b>12:00</b> caminar inclinado tras pesas · <b>20:00</b> caminar/trote suave. Apunta lo que hagas.</div>
+    <div class="stat-grid" style="margin-top:14px">
+      <div class="stat"><div class="v">${todayMin}</div><div class="l">Min hoy</div></div>
+      <div class="stat"><div class="v">${log.length}</div><div class="l">Sesiones totales</div></div>
+    </div>
+    <div class="ctype">
+      <button class="on" onclick="setCardioType('Caminar inclinado',this)">🚶 Inclinado</button>
+      <button onclick="setCardioType('Caminar',this)">🚶 Caminar</button>
+      <button onclick="setCardioType('Trote suave',this)">🏃 Trote</button>
+      <button onclick="setCardioType('Bici',this)">🚴 Bici</button>
+    </div>
+    <div class="cardio-add">
+      <div><div class="ipt-lab">Minutos</div><input class="ipt" id="cMin2" type="number" inputmode="numeric" placeholder="${goalMin}"></div>
+      <div><div class="ipt-lab">Momento</div><select class="ipt" id="cWhen" style="padding:11px 6px"><option>12:00 (tras pesas)</option><option>20:00 (tarde)</option><option>Otro</option></select></div>
+    </div>
+    <button class="copy" style="background:var(--accent);color:#000;margin-top:11px" onclick="addCardio()">+ Registrar cardio</button>`;
+  if(todayCardio.length){
+    h+=`<div style="margin-top:14px">`;
+    todayCardio.forEach((c,i)=>{
+      const realIdx=log.indexOf(c);
+      h+=`<div class="meal-item"><div><div class="mn">${c.type}</div><div class="mt">${c.when||''}</div></div>
+        <div style="display:flex;align-items:center"><span class="mk">${c.min} min</span>
+        <button class="del" onclick="delCardio(${realIdx})">✕</button></div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+  // recomendación según día
+  h+=`<div class="card"><h2 style="font-size:19px">💡 Cómo hacer el cardio</h2>
+    <div class="sub">
+    <b>12:00 · tras pesas:</b> ${goalMin} min caminar inclinado (8-12% pendiente), ritmo cómodo. Quema grasa aprovechando el glucógeno vacío.<br><br>
+    <b>20:00 · tarde (opcional):</b> 25-35 min caminar rápido o trote MUY suave. Ritmo en el que puedas hablar. Baja intensidad = quema grasa sin fatigar las piernas.<br><br>
+    <b>Finde sin gym:</b> sábado 40 min de paseo/bici suave. Domingo descanso (pasea si te apetece).<br><br>
+    Si las piernas están machacadas o estás cansado, salta la sesión de tarde sin culpa. La dieta importa más que no fallar un cardio.</div></div>`;
+  // historial reciente
+  if(log.length){
+    h+=`<div class="card"><h2 style="font-size:19px">Historial</h2>`;
+    [...log].reverse().slice(0,12).forEach(c=>{
+      const dd=new Date(c.date); const ds=dd.toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+      h+=`<div class="hist-item"><div><div class="d">${c.type}</div><div class="x">${ds} · ${c.when||''}</div></div><div class="vol">${c.min}'</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  return h;
+}
+function addCardio(){
+  const u=USER, d=load(u);
+  const min=parseInt(document.getElementById('cMin2').value)||0;
+  const when=document.getElementById('cWhen').value;
+  if(!min){alert('Pon los minutos 🙂');return;}
+  if(!d.cardioLog) d.cardioLog=[];
+  d.cardioLog.push({date:Date.now(), dateKey:todayKey(), type:CARDIO_TYPE, min, when});
+  save(u,d); render();
+}
+function delCardio(i){ const u=USER,d=load(u); d.cardioLog.splice(i,1); save(u,d); render(); }
+
 /* ============ BODY WEIGHT ============ */
 function viewBody(){
   const u=USER, d=load(u);
@@ -846,6 +1009,11 @@ function importData(ev){
 
 /* init */
 setUser('me');
+
+/* registrar service worker (PWA + push) */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(e => console.log('SW:', e));
+}
 </script>
 </body>
 </html>
