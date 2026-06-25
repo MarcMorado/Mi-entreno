@@ -178,6 +178,18 @@
   .countdown{background:linear-gradient(135deg,var(--her),#ff8fc0);color:#2a0016;
     border-radius:11px;padding:11px 14px;margin-bottom:13px;font-size:13.5px;font-weight:800;
     text-align:center;letter-spacing:.3px}
+  .cut-banner{background:linear-gradient(135deg,#ff4d1c,#ff2d2d);color:#fff;
+    border-radius:11px;padding:11px 14px;margin-bottom:11px;font-size:13px;font-weight:800;
+    text-align:center;letter-spacing:.2px;line-height:1.45;box-shadow:0 4px 16px rgba(255,45,45,.3)}
+  .cut-banner b{font-family:'Bebas Neue';font-size:17px;letter-spacing:1px;vertical-align:-1px}
+  .julio-plan{border-color:rgba(255,77,28,.4)}
+  .jp-row{display:flex;gap:11px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+  .jp-row:last-of-type{border-bottom:0}
+  .jp-d{font-family:'Bebas Neue';font-size:17px;color:var(--accent);width:34px;flex:0 0 34px;letter-spacing:1px}
+  .jp-t{font-size:12.5px;color:var(--ink);font-weight:600;line-height:1.35}
+  .jp-pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+  .jp-pill{font-size:11px;font-weight:800;color:var(--ink);background:var(--panel2);
+    border:1px solid var(--line);padding:7px 11px;border-radius:999px}
   .countdown b{font-family:'Bebas Neue';font-size:21px;vertical-align:-1px;margin:0 2px}
   .me .countdown{background:linear-gradient(135deg,var(--accent),#ff8a4c);color:#2a0d00}
   .kcal-ring{display:flex;align-items:center;gap:16px}
@@ -266,6 +278,9 @@ const PLAN = {
   me:{
     name:"Marc", goal:"Volumen magro · espalda en V",
     kcalGoal:2700, proteinGoal:195,
+    cutMode:{from:"2026-07-01", to:"2026-08-01", kcal:2300, protein:200, cardioMin:28,
+      label:"MODO JULIO", targetName:"agosto",
+      note:"Déficit agresivo de definición. Proteína alta para no perder músculo. Si notas mareos, mal descanso o el hombro se resiente: aflojar."},
     cardio:{label:"Caminar inclinado", min:12, note:"Inclinación 8-12%, ritmo cómodo. Quema grasa sin tocar tus piernas para el gym."},
     inc:2.5, // kg que sube cuando completa
     days:[
@@ -324,12 +339,12 @@ const PLAN = {
         {n:"Face pull",s:3,rm:15,rM:20,note:"Postura recta = se ve más estilizada",start:7},
        ]},
       {tag:"Día 2 · Glúteo + Pierna", title:"El día estrella para tu objetivo",
-       note:"OPERACIÓN MEDUSA: glúteo y piernas son tu prioridad nº1. Aprieta cada repetición.",
+       note:"OPERACIÓN MEDUSA: glúteo y piernas son tu prioridad nº1. Aprieta cada repetición. (Sin hip thrust: protegemos tu cadera)",
        ex:[
-        {n:"Máquina de cadera / hip thrust",s:4,rm:12,rM:15,note:"Tu ejercicio nº1 · aprieta arriba 1 seg",start:20},
-        {n:"Prensa (leg press)",s:4,rm:12,rM:15,note:"Pies altos y juntos = más glúteo",start:30},
-        {n:"Patada glúteo en máquina (pierna atrás)",s:4,rm:15,rM:20,note:"La de estirar pierna hacia detrás · aprieta arriba",start:10},
+        {n:"Prensa pies altos (leg press)",s:4,rm:12,rM:15,note:"Tu nº1 de glúteo · pies altos y juntos · aprieta arriba",start:30},
+        {n:"Patada glúteo en máquina (pierna atrás)",s:4,rm:15,rM:20,note:"La de estirar pierna hacia detrás · aprieta arriba 1 seg",start:10},
         {n:"Abductor máquina (abrir piernas)",s:4,rm:15,rM:20,note:"Glúteo medio = forma redondeada",start:20},
+        {n:"Puente de glúteo en suelo",s:3,rm:15,rM:20,note:"Sin barra encima · aprieta arriba · alternativa al hip thrust",start:0},
         {n:"Extensión de cuádriceps",s:3,rm:12,rM:15,start:15},
        ]},
       {tag:"Día 3 · Tirón + Core", title:"Espalda · Cintura · Abdomen",
@@ -343,13 +358,13 @@ const PLAN = {
         {n:"Plancha lateral (seg/lado)",s:3,rm:15,rM:30,note:"Cintura y oblicuos · peso=0",start:0},
        ]},
       {tag:"Día 4 · Glúteo + Full", title:"Repaso glúteo y cuerpo entero",
-       note:"Segunda dosis de glúteo a la semana = resultados visibles antes del festival.",
+       note:"Segunda dosis de glúteo a la semana = resultados visibles antes del festival. (Sin hip thrust)",
        ex:[
-        {n:"Máquina de cadera / hip thrust",s:4,rm:12,rM:15,note:"Otra vez, es tu prioridad",start:20},
+        {n:"Prensa pies altos (leg press)",s:4,rm:12,rM:15,note:"Glúteo · pies altos y juntos",start:30},
+        {n:"Patada glúteo en máquina (pierna atrás)",s:4,rm:15,rM:20,note:"Aprieta arriba",start:10},
         {n:"Curl femoral tumbado",s:3,rm:12,rM:15,note:"Femoral · sin cargar la lumbar",start:15},
         {n:"Sentadilla máquina (peso en hombros)",s:3,rm:12,rM:15,note:"Profundidad cómoda",start:15},
         {n:"Abductor máquina",s:4,rm:15,rM:20,note:"Más glúteo medio",start:20},
-        {n:"Elevaciones laterales mancuerna",s:3,rm:12,rM:15,start:2},
        ]},
     ]
   }
@@ -396,6 +411,12 @@ function render(){
 function viewTrain(){
   const u=USER, day=PLAN[u].days[DAYIDX];
   let h=`<div class="card">`;
+  // banner modo julio (cut)
+  const _cut=cutActive(u);
+  if(_cut){
+    const dleft=Math.ceil((new Date(_cut.to+'T00:00') - new Date())/86400000);
+    h+=`<div class="cut-banner">🔥 <b>${_cut.label}</b> activo · ${dleft} días de definición · objetivo ${_cut.kcal} kcal / ${_cut.protein}g prot</div>`;
+  }
   // contador de festival
   if(PLAN[u].targetDate){
     const days=Math.ceil((new Date(PLAN[u].targetDate+'T00:00') - new Date())/86400000);
@@ -438,15 +459,38 @@ function viewTrain(){
   h+=`</div>`;
   // bloque de cardio final
   const c=PLAN[u].cardio;
+  const _cutC=cutActive(u);
+  const cMin=_cutC?_cutC.cardioMin:c.min;
   h+=`<div class="card cardio">
     <div class="day-head"><h2 style="font-size:20px">🚶 ${c.label}</h2><span class="day-tag">FINAL · CARDIO</span></div>
-    <div class="sub">${c.note}</div>
+    <div class="sub">${_cutC?'Modo julio: '+cMin+' min para maximizar la grasa. ':''}${c.note}</div>
     <div class="cardio-row">
-      <div><div class="ipt-lab">Minutos</div><input class="ipt" id="cardioMin" type="number" inputmode="numeric" placeholder="${c.min}"></div>
+      <div><div class="ipt-lab">Minutos</div><input class="ipt" id="cardioMin" type="number" inputmode="numeric" placeholder="${cMin}"></div>
       <div><div class="ipt-lab">Inclinación %</div><input class="ipt" id="cardioInc" type="number" inputmode="numeric" placeholder="10"></div>
     </div>
     <div class="note-ex" style="margin-top:9px">Se guarda junto con la sesión al pulsar Guardar.</div>
   </div>`;
+  // plan semanal de julio (solo en modo cut)
+  if(_cutC){
+    h+=`<div class="card julio-plan">
+      <div class="day-head"><h2 style="font-size:20px">🔥 Plan semanal Julio</h2><span class="day-tag">DEFINICIÓN</span></div>
+      <div class="sub">Además del entreno y la dieta, esto es lo que dispara la pérdida de grasa:</div>
+      <div class="jp-row"><span class="jp-d">Lun</span><span class="jp-t">Pesas (Día 1) + ${_cutC.cardioMin} min cardio</span></div>
+      <div class="jp-row"><span class="jp-d">Mar</span><span class="jp-t">Pesas (Día 2) + ${_cutC.cardioMin} min cardio</span></div>
+      <div class="jp-row"><span class="jp-d">Mié</span><span class="jp-t">Descanso activo · 30-40 min caminar suave</span></div>
+      <div class="jp-row"><span class="jp-d">Jue</span><span class="jp-t">Pesas (Día 3) + ${_cutC.cardioMin} min cardio</span></div>
+      <div class="jp-row"><span class="jp-d">Vie</span><span class="jp-t">Pesas (Día 4) + ${_cutC.cardioMin} min cardio</span></div>
+      <div class="jp-row"><span class="jp-d">Sáb</span><span class="jp-t">Cardio suave 40 min (bici/elíptica/paseo largo)</span></div>
+      <div class="jp-row"><span class="jp-d">Dom</span><span class="jp-t">Descanso total · pasea si te apetece</span></div>
+      <div class="jp-pills">
+        <span class="jp-pill">👟 10-12k pasos/día</span>
+        <span class="jp-pill">😴 7-8h sueño</span>
+        <span class="jp-pill">💧 3-4L agua</span>
+        <span class="jp-pill">🥩 200g proteína</span>
+      </div>
+      <div class="warn">⚠️ Si notas mareos, mala recuperación, dormir mal o dolor de hombro: aflojar (sube calorías, baja cardio). Más no es mejor.</div>
+    </div>`;
+  }
   return h;
 }
 
@@ -529,8 +573,14 @@ function viewStats(){
 function todayKey(){ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 let FOOD_SLOT='Comida';
 function setSlot(s,el){ FOOD_SLOT=s; [...document.querySelectorAll('.seg button')].forEach(b=>b.className=''); el.className='on'; }
-function kcalGoal(u){ const d=load(u); return d.kcalGoal||PLAN[u].kcalGoal; }
-function protGoal(u){ const d=load(u); return d.protGoal||PLAN[u].proteinGoal; }
+function cutActive(u){
+  const c=PLAN[u].cutMode; if(!c) return null;
+  const now=new Date();
+  if(now>=new Date(c.from+'T00:00') && now<new Date(c.to+'T00:00')) return c;
+  return null;
+}
+function kcalGoal(u){ const d=load(u); if(d.kcalGoal) return d.kcalGoal; const c=cutActive(u); return c?c.kcal:PLAN[u].kcalGoal; }
+function protGoal(u){ const d=load(u); if(d.protGoal) return d.protGoal; const c=cutActive(u); return c?c.protein:PLAN[u].proteinGoal; }
 
 function viewFood(){
   const u=USER, d=load(u), tk=todayKey();
@@ -545,6 +595,11 @@ function viewFood(){
   const circ=2*Math.PI*46, off=circ-(pct/100)*circ;
   const col=total>goal?'var(--accent2)':'var(--good)';
   let h=`<div class="card">`;
+  const _cutF=cutActive(u);
+  if(_cutF){
+    const dl=Math.ceil((new Date(_cutF.to+'T00:00') - new Date())/86400000);
+    h+=`<div class="cut-banner">🔥 <b>${_cutF.label}</b> · ${dl} días · come ${_cutF.kcal} kcal y ${_cutF.protein}g proteína</div>`;
+  }
   if(PLAN[u].targetDate){
     const dd=Math.ceil((new Date(PLAN[u].targetDate+'T00:00') - new Date())/86400000);
     if(dd>0) h+=`<div class="countdown">🎯 <b>${dd}</b> días para ${PLAN[u].targetName} · cuida el déficit</div>`;
