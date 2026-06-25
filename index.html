@@ -977,6 +977,16 @@ function viewAI(){
     • Si completas TODAS las series en el tope → el peso sube solo (${u==='me'?'+2,5':'+1,25'} kg) la próxima vez.<br>
     • Si no, mantiene el peso hasta que lo domines.<br>
     • El nº que ves en naranja es tu peso objetivo de hoy.</div></div>
+    <div class="card"><h2 style="font-size:19px">🔔 Entrenador IA · Notificaciones</h2>
+    <div class="sub">Activa las notificaciones para recibir mensajes de tu entrenador a lo largo del día, incluso con la app cerrada.</div>
+    <button class="backup-btn" id="notifBtn" onclick="activarNotis()">🔔 Activar notificaciones</button>
+    <div id="notifStatus" class="note-ex" style="margin-top:10px"></div>
+    <div id="subBox" style="display:none;margin-top:10px">
+      <div class="sub" style="font-size:11.5px">Tu suscripción push (cópiala para el servidor):</div>
+      <textarea id="subText" readonly style="width:100%;height:90px;background:var(--bg);border:1px solid var(--line);color:var(--mute);border-radius:9px;padding:9px;font-size:9px;font-family:monospace;margin-top:6px"></textarea>
+      <button class="copy" style="margin-top:8px" onclick="navigator.clipboard.writeText(document.getElementById('subText').value).then(()=>alert('📋 Suscripción copiada'))">📋 Copiar suscripción</button>
+    </div>
+    </div>
     <div class="card"><h2 style="font-size:19px">💾 Copia de seguridad</h2>
     <div class="sub">Tus datos viven en este móvil. Exporta de vez en cuando para tener copia. Si cambias de móvil o se borran, los recuperas importando.</div>
     <button class="backup-btn" onclick="exportData()">⬇️ Exportar mis datos</button>
@@ -984,6 +994,32 @@ function viewAI(){
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
     </div>`;
   return h;
+}
+const VAPID_PUBLIC='BGnGeoU5Z2Xn8KIcrM8Xv3OjgXDZA8F956s7JuarIaaJ2pu5F8R7x4A6l1NVinmk7r8-Etnh4mp_dYr8TUT7Kac';
+function urlB64ToUint8(base64){
+  const pad='='.repeat((4-base64.length%4)%4);
+  const b=(base64+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(b); const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+async function activarNotis(){
+  const st=document.getElementById('notifStatus');
+  try{
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)){ st.textContent='❌ Este navegador no soporta notificaciones push.'; return; }
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ st.textContent='❌ Permiso denegado. Actívalo en los ajustes del navegador.'; return; }
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64ToUint8(VAPID_PUBLIC)});
+    }
+    st.textContent='✅ Notificaciones activadas. Copia tu suscripción de abajo y guárdala para el servidor.';
+    document.getElementById('subBox').style.display='block';
+    document.getElementById('subText').value=JSON.stringify({user:USER, sub:sub});
+    // notificación de prueba local
+    reg.showNotification('FORJA · Entrenador',{body:'¡Notificaciones activadas! 💪 Aquí recibirás tus mensajes.',icon:'icon-192.png',vibrate:[200,100,200]});
+  }catch(e){ st.textContent='❌ Error: '+e.message; }
 }
 function markReviewed(){
   const u=USER, d=load(u); d.lastReviewWeek=weekNum(u); save(u,d); render();
