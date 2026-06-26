@@ -1,0 +1,13 @@
+{
+  "name": "forja-coach",
+  "version": "1.0.0",
+  "description": "Entrenador IA de FORJA: envia notificaciones push generadas con Claude",
+  "main": "coach.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node coach.js"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}
